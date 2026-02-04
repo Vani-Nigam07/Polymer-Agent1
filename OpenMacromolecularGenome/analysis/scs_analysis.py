@@ -7,6 +7,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from tqdm import tqdm
+import seaborn as sns
 from rdkit import Chem
 
 sys.path.append('/home/vani/omgfine/OpenMacromolecularGenome')
@@ -81,15 +82,46 @@ def main():
         print("No valid SC scores computed.")
 
     if args.hist:
-        plt.figure(figsize=(6,4))
-        plt.hist(scs_valid, bins=60, color='C0', alpha=0.8)
-        plt.xlabel("SC Score (lower = easier)")
-        plt.ylabel("Count")
-        plt.title("SC Score distribution")
+        # plt.figure(figsize=(6,4))
+        # plt.hist(scs_valid, bins=60, color='C0', alpha=0.8)
+        # plt.xlabel("SC Score (lower = easier)")
+        # plt.ylabel("Count")
+        # plt.title("SC Score distribution")
+        # plt.tight_layout()
+        # plt.savefig(args.hist, dpi=150)
+        # plt.close()
+        # print(f"Saved histogram: {args.hist}")
+         # ~3.25 in ACS style
+
+        sns.set_theme(style="whitegrid", font_scale=1.0)
+
+        plt.figure(figsize=(3, 2.4))  # ACS single-column width
+
+        ax = sns.histplot(scs_valid, bins=30, kde=True, color='skyblue', edgecolor='black', alpha=0.7)
+
+        ax.set_xlabel("Synthetic Accessibility (SA) Score", fontsize=9)
+        ax.set_ylabel("Count", fontsize=9)
+
+        ax.tick_params(axis='both', labelsize=8)
+        
+
         plt.tight_layout()
-        plt.savefig(args.hist, dpi=150)
+
+        # --- Save as VECTOR PDF with embedded fonts ---
+        plt.savefig(
+            args.hist,
+            format="pdf",
+            bbox_inches="tight"
+        )
+
         plt.close()
-        print(f"Saved histogram: {args.hist}")
+
+        print("Saved histogram as vector PDF")
+
+
+
+
+
 
     if args.threshold is not None:
         filtered = df[df['SC_score'].notna() & (df['SC_score'] <= args.threshold)].reset_index(drop=True)

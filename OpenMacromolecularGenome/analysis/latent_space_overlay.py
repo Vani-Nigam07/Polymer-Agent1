@@ -180,24 +180,43 @@ def plot_latent_with_generated(
     )
   
     
-    ax.scatter(
-        Z_pca[:, 0],
-        Z_pca[:, 1],
+    # Create DataFrames for seaborn plotting
+    db_df = pd.DataFrame({
+        'PC1': Z_pca[:, 0],
+        'PC2': Z_pca[:, 1],
+        'type': 'database'
+    })
+
+    gen_df = pd.DataFrame({
+        'PC1': z_gen_pca[:, 0],
+        'PC2': z_gen_pca[:, 1],
+        'type': 'generated'
+    })
+
+    # Plot database points with seaborn
+    sns.scatterplot(
+        data=db_df,
+        x='PC1',
+        y='PC2',
         s=3,
         alpha=0.25,
         color="blue",
-        rasterized=True
+        rasterized=True,
+        ax=ax
     )
 
-    ax.scatter(
-        z_gen_pca[:, 0],
-        z_gen_pca[:, 1],
+    # Plot generated points with seaborn
+    sns.scatterplot(
+        data=gen_df,
+        x='PC1',
+        y='PC2',
         s=70,
         marker="*",
         color="red",
         edgecolor="black",
         linewidth=0.5,
-        zorder=5
+        style='type',
+        ax=ax
     )
 
     ax.set_xlabel(
@@ -378,11 +397,20 @@ def plot_latent_property_ACS_EPS(
 
     plt.figure(figsize=(3.25, 1.75), dpi=300)
 
-    plt.scatter(
-        Z[:, d1],
-        Z[:, d2],
-        c=property_vals,
-        cmap="cividis",
+    # Create DataFrame for seaborn plotting
+    plot_df = pd.DataFrame({
+        f'Latent dim {d1}': Z[:, d1],
+        f'Latent dim {d2}': Z[:, d2],
+        'property': property_vals
+    })
+
+    # Plot property-colored scatter with seaborn
+    sc = sns.scatterplot(
+        data=plot_df,
+        x=f'Latent dim {d1}',
+        y=f'Latent dim {d2}',
+        hue='property',
+        palette="cividis",
         s=4,
         alpha=0.4
     )
@@ -391,10 +419,17 @@ def plot_latent_property_ACS_EPS(
         z_gen_scaled = StandardScaler().fit_transform(
             np.vstack([Z_latent, z_gen])
         )[-1]
-        plt.scatter(
-            z_gen_scaled[d1],
-            z_gen_scaled[d2],
-            c="red",
+        # Plot generated point with seaborn
+        gen_df = pd.DataFrame({
+            f'Latent dim {d1}': [z_gen_scaled[d1]],
+            f'Latent dim {d2}': [z_gen_scaled[d2]],
+            'type': ['generated']
+        })
+        sns.scatterplot(
+            data=gen_df,
+            x=f'Latent dim {d1}',
+            y=f'Latent dim {d2}',
+            color="red",
             s=70,
             marker="*",
             edgecolor="black",
@@ -459,5 +494,3 @@ if __name__ == "__main__":
     Z_latent, property_vals, df = encode_latents_from_csv(CSV,PRETRAINED_DIR,target_property="PE_I")
     top_dims, corr = find_property_correlated_latent_dims(Z_latent,property_vals,top_k=2)
     plot_latent_property_ACS_EPS(Z_latent,property_vals,top_dims,out_eps="latent_property_PE_I.eps")
-
- 

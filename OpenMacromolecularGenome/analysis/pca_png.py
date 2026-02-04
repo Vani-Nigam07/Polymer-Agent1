@@ -28,17 +28,40 @@ def pca_on_properties(csv_path,
     pca = PCA(n_components=2)
     Z = pca.fit_transform(X_scaled)
 
+    # Create DataFrame for seaborn plotting
+    pca_df = pd.DataFrame({
+        'PC1': Z[:, 0],
+        'PC2': Z[:, 1]
+    })
+    if len(property_columns) > 0:
+        pca_df[property_columns[0]] = df[property_columns[0]].values
+
     plt.figure(figsize=(8,6))
     cmap = sns.color_palette("cividis", as_cmap=True)
-    # color by first property if exists
+
+    # Use seaborn scatterplot
     if len(property_columns) > 0:
-        c = df[property_columns[0]].values
-        sc = plt.scatter(Z[:,0], Z[:,1], c=c, cmap=cmap, s=8, alpha=0.8)
-        plt.colorbar(sc, label=property_columns[0])
+        sc = sns.scatterplot(
+            data=pca_df,
+            x='PC1',
+            y='PC2',
+            hue=property_columns[0],
+            palette=cmap,
+            s=8,
+            alpha=0.8
+        )
+        plt.colorbar(sc.collections[0], label=property_columns[0])
     else:
-        plt.scatter(Z[:,0], Z[:,1], s=8, alpha=0.8)
-    plt.xlabel(f'PC1 ({pca.explained_variance_ratio_[37]*100:.1f}%)')
-    plt.ylabel(f'PC2 ({pca.explained_variance_ratio_[51]*100:.1f}%)')
+        sns.scatterplot(
+            data=pca_df,
+            x='PC1',
+            y='PC2',
+            s=8,
+            alpha=0.8
+        )
+
+    plt.xlabel(f'PC1 ({pca.explained_variance_ratio_[0]*100:.1f}%)')
+    plt.ylabel(f'PC2 ({pca.explained_variance_ratio_[1]*100:.1f}%)')
     plt.title('PCA on properties')
     plt.tight_layout()
     plt.savefig(out_png, dpi=200)
@@ -110,7 +133,11 @@ def pca_on_vae_latents(csv_path,
 
     # scree plot
     plt.figure(figsize=(6,4))
-    plt.plot(np.arange(1, len(explained)+1), explained, '-o', markersize=4)
+    scree_data = pd.DataFrame({
+        'Principal component': np.arange(1, len(explained)+1),
+        'Explained variance (%)': explained
+    })
+    sns.lineplot(data=scree_data, x='Principal component', y='Explained variance (%)', marker='o', markersize=4)
     plt.xlabel('Principal component')
     plt.ylabel('Explained variance (%)')
     plt.title('Scree plot')
@@ -120,8 +147,12 @@ def pca_on_vae_latents(csv_path,
 
     # cumulative variance
     cum = np.cumsum(explained)
+    cum_data = pd.DataFrame({
+        'Number of components': np.arange(1, len(cum)+1),
+        'Cumulative explained variance (%)': cum
+    })
     plt.figure(figsize=(6,4))
-    plt.plot(np.arange(1, len(cum)+1), cum, '-o', markersize=4)
+    sns.lineplot(data=cum_data, x='Number of components', y='Cumulative explained variance (%)', marker='o', markersize=4)
     plt.xlabel('Number of components')
     plt.ylabel('Cumulative explained variance (%)')
     plt.axhline(80, color='red', linestyle='--', label='80%')
@@ -135,8 +166,13 @@ def pca_on_vae_latents(csv_path,
     n_needed = np.searchsorted(cum, threshold) + 1
     print(f"Components needed to reach {threshold}% variance: {n_needed}")
 
+    # PCA scatter plot using seaborn
+    pca_df = pd.DataFrame({
+        'Principal Component 1': Z_pca[:, 0],
+        'Principal Component 2': Z_pca[:, 1]
+    })
     plt.figure(figsize=(8,6))
-    plt.scatter(Z_pca[:,0], Z_pca[:,1], s=8, alpha=0.5)
+    sns.scatterplot(data=pca_df, x='Principal Component 1', y='Principal Component 2', s=8, alpha=0.5)
     plt.xlabel(f'Principal Component 1 ({pca.explained_variance_ratio_[0]*100:.1f}%)')
     plt.ylabel(f'Principal Component 2 ({pca.explained_variance_ratio_[1]*100:.1f}%)')
     plt.title('PCA on VAE latent space (z_mean)')
@@ -178,16 +214,26 @@ def pca_scatter_colored(csv_path, features, color_by, sample=None,
     if color_log:
         color_vals = np.log1p(np.maximum(color_vals, 0.0))
 
+    # Create DataFrame for seaborn plotting
+    pca_df = pd.DataFrame({
+        'Principal Component 1': Z[:, 0],
+        'Principal Component 2': Z[:, 1],
+        color_by: color_vals
+    })
+
     # ===== Continuous coloring =====
     if quantile_bins is None:
-        sc = ax.scatter(
-            Z[:, 0], Z[:, 1],
-            c=color_vals,
-            cmap=cmap,
+        sc = sns.scatterplot(
+            data=pca_df,
+            x='Principal Component 1',
+            y='Principal Component 2',
+            hue=color_by,
+            palette=cmap,
             s=s,
-            alpha=alpha
+            alpha=alpha,
+            ax=ax
         )
-        plt.colorbar(sc, ax=ax, fraction=0.046, pad=0.04)
+        plt.colorbar(sc.collections[0], ax=ax, fraction=0.046, pad=0.04)
 
     # ===== Quantile / categorical coloring =====
     else:
@@ -197,6 +243,7 @@ def pca_scatter_colored(csv_path, features, color_by, sample=None,
             labels=False,
             duplicates='drop'
         )
+        pca_df['quantile_labels'] = labels
 
         palette = sns.color_palette(
             "tab10" if quantile_bins <= 10 else "tab20",
@@ -204,9 +251,10 @@ def pca_scatter_colored(csv_path, features, color_by, sample=None,
         )
 
         sns.scatterplot(
-            x=Z[:, 0],
-            y=Z[:, 1],
-            hue=labels,
+            data=pca_df,
+            x='Principal Component 1',
+            y='Principal Component 2',
+            hue='quantile_labels',
             palette=palette,
             s=s,
             alpha=alpha,
@@ -285,11 +333,11 @@ def pca_scatter_colored(csv_path, features, color_by, sample=None,
 
 def make_pca_collage(csv_path, features, properties,
                      sample=50000,
-                     out_pdf='Figure_3_PCA_properties.pdf'):
+                     out_pdf='Figure_3_PCA_properties.png'):
 
     fig, axes = plt.subplots(
         2, 3,
-        figsize=(7.2, 4.8),
+        figsize=(10, 7),
         constrained_layout=True
     )
 
@@ -339,5 +387,5 @@ if __name__ == '__main__':
         features=['Eea','Egb','EPS','PE_I','OPV'],
         properties=['Eea','Egb','EPS','PE_I','OPV'],
         sample=50000,
-        out_pdf='Figure_3_PCA_properties.pdf'
+        out_pdf='PCA_properties.png'
     )

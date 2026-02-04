@@ -1,10 +1,11 @@
 [project]
-name = "omgfine"
+name = "open-macromolecular-genome-polyagent"
 version = "0.1.0"
-description = "Add your description here"
+description = "generates polymer smiles for polyagent"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
+    
     "mcp[cli]>=1.21.0",
     "torch>=1.3.0",
     "numpy>=1.17.2,<2.0",
@@ -31,3 +32,6 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["."]
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["OpenMacromolecularGenome*"]

@@ -3,6 +3,8 @@ from rdkit.Chem import RDConfig
 import os
 import sys
 import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
 import pandas as pd
 sys.path.append(os.path.join(RDConfig.RDContribDir, 'SA_Score'))
 #  adapted from  https://github.com/rdkit/rdkit/tree/master/Contrib/SA_Score 
@@ -68,26 +70,35 @@ def main():
     print("\nSA score statistics (valid molecules only):")
     for k, v in stats.items():
         print(f"{k:>8s}: {v:.3f}")
-    import matplotlib.pyplot as plt
 
     if args.hist is not None:
-        # ~3.25 in
-        fig, ax = plt.subplots(figsize=(3.25, 3.0))
+        # ~3.25 in ACS style
 
-        ax.hist(sa, bins=30)
+        sns.set_theme(style="whitegrid", font_scale=1.0)
+
+        plt.figure(figsize=(3, 2.4))  # ACS single-column width
+
+        ax = sns.histplot(sa, bins=30, kde=True, color='skyblue', edgecolor='black', alpha=0.7)
 
         ax.set_xlabel("Synthetic Accessibility (SA) Score", fontsize=9)
         ax.set_ylabel("Count", fontsize=9)
 
         ax.tick_params(axis='both', labelsize=8)
-        ax.spines["top"].set_visible(False)
-        ax.spines["right"].set_visible(False)
+        
 
-        fig.tight_layout()
-        fig.savefig(args.hist, format="pdf")
-        plt.close(fig)
+        plt.tight_layout()
 
-        print(f"Saved histogram PDF to: {args.hist}")
+        # --- Save as VECTOR PDF with embedded fonts ---
+        plt.savefig(
+            args.hist,
+            format="pdf",
+            bbox_inches="tight"
+        )
+
+        plt.close()
+
+        print("Saved histogram as vector PDF")
+
 
 
 
@@ -98,4 +109,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
