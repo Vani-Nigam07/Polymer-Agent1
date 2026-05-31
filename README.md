@@ -1,5 +1,6 @@
 
-# Finetuning a model - Graph-Encoder, RNN-Decoder
+#  [BaratiLab/Polymer-Agent](https://github.com/BaratiLab/Polymer-Agent).
+## Finetuning a model - Graph-Encoder, RNN-Decoder
 
 This repository contains the fine-tuning module and core model architecture for the generative inverse-design component of **Polymer-Agent**. 
 ---
@@ -35,9 +36,5 @@ The fine-tuning loop optimizes generative pipelines based on empirical target pa
 
 If you utilize this architecture or the associated fine-tuning checkpoints in your research, please cite the following foundational works:
 
-* *Foundational Methodology:* [ACS JCIM Article Title/Citation Standard format based on the DOI link]
-* *Component Module:* Part of the ecosystem hosted at [BaratiLab/Polymer-Agent](https://github.com/BaratiLab/Polymer-Agent).
-
----
-* **Elevated "1/3 of module":** Re-framed this to show it is a specialized, modular component of a larger ecosystem (`Polymer-Agent`), which reads as a planned software architecture rather than an incomplete project.
-* **Added Badges & Visual Flow:** Researchers skim READMEs quickly; clean badges and an explicit structural breakdown make the underlying code's purpose immediately clear.
+* *Foundational Methodology:* [DOI Link](https://pubs.acs.org/doi/10.1021/acs.jcim.6c00343)
+* *Component Module:* Part of the AI agent hosted at [BaratiLab/Polymer-Agent](https://github.com/BaratiLab/Polymer-Agent).
